@@ -67,10 +67,11 @@ class webCamConnect:
                         #self.image = cv2.morphologyEx(self.image, cv2.MORPH_OPEN, (9,9))
                         
                         cv2.imshow(self.name, self.image)  
-                        
+                        '''
                         if i%30==0:
                             cv2.imwrite(str(i)+'.jpg', self.image)
                         i=i+1
+                        '''
                         
                  except:                
                      print "Receive failed!"            

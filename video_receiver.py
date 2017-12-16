@@ -12,7 +12,7 @@ import cv2
 import re
 
 class webCamConnect:      
-    def __init__(self, resolution = [640,480], remoteAddress = ("192.168.0.102", 7999), windowName = "video"):          
+    def __init__(self, resolution = [640,480], remoteAddress = ("192.168.0.101", 7999), windowName = "video"):          
         self.remoteAddress = remoteAddress     
         self.resolution = resolution    
         self.name = windowName
@@ -67,10 +67,11 @@ class webCamConnect:
                         #self.image = cv2.morphologyEx(self.image, cv2.MORPH_OPEN, (9,9))
                         
                         cv2.imshow(self.name, self.image)  
-                        
+                        '''
                         if i%30==0:
                             cv2.imwrite(str(i)+'.jpg', self.image)
                         i=i+1
+                        '''
                         
                  except:                
                      print "Receive failed!"            
