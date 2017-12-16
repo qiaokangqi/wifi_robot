@@ -16,13 +16,13 @@ class webCamera:
         self.setSocket(self.host);    
         self.img_quality = 95
         self.flag=0
-        
+    '''
     def setImageResolution(self, resolution):      
         self.resolution = resolution;  
         
     def setHost(self, host):      
         self.host = host;  
-        
+    '''    
     def setSocket(self, host):      
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM);                  
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR,1);              
@@ -31,25 +31,38 @@ class webCamera:
         print "Server running on port:%d" % host[1]
         
     def recv_config(self,client):   
-        client.settimeout(2)
-        info = struct.unpack("lhh",client.recv(8));   
-        if len(info) == 0:
+        try:
+            info = struct.unpack("lhh",client.recv(8));   
+        except:
+            print 'socket.error'
             return 0
+            
+        if len(info) != 3:
+            print 'Connecting failed! receive config failed!'
+            return 0
+            
         if info[0]>911:        
-            print info[0]   
+            #print info[0]   
             self.img_quality=int(info[0])-911              
             self.resolution=list(self.resolution)        
             self.resolution[0]=info[1]        
             self.resolution[1]=info[2]        
-            self.resolution=tuple(self.resolution)                
+            self.resolution=tuple(self.resolution)  
+            print self.resolution              
             return 1    
         else :        
+            print 'Connecting failed! receive config failed!'
             return 0
             
     def _processConnection(self, client,addr):     
         if(self.recv_config(client)==0):        
-            return    
+            return
+            
         camera = cv2.VideoCapture(0)    
+        if camera == None:
+            print 'Open camera Failed!'
+            return
+        
         encode_param=[int(cv2.IMWRITE_JPEG_QUALITY),self.img_quality]  
         '''           
         f = open("video_info.txt", 'a+')    
@@ -80,9 +93,7 @@ class webCamera:
                 print 'Get image failed'
                 return
             '''
-            
             img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-            
             img  = cv2.resize(img,self.resolution)   
             '''
             if self.flag==0:
@@ -93,15 +104,15 @@ class webCamera:
             #img = cv2.GaussianBlur(img,(3,3),0)  
             #img = cv2.Canny(img, 50, 150)  
             
-            result, imgencode = cv2.imencode('.jpg',img, encode_param)        
-            img_code = numpy.array(imgencode)        
-            imgdata  = img_code.tostring()   
+            result, img_encoded = cv2.imencode('.jpg',img, encode_param)        
+            img_code = numpy.array(img_encoded)        
+            img_to_send  = img_code.tostring()   
 
                         
                 
             try:                    
-                client.send(struct.pack("lhh",len(imgdata),
-                        self.resolution[0],self.resolution[1])+imgdata); #发送图片信息(图片长度,分辨率,图片内容)                
+                client.send(struct.pack("lhh",len(img_to_send),
+                        self.resolution[0],self.resolution[1])+img_to_send); #发送图片信息(图片长度,分辨率,图片内容)                
             except:    
                 
                 #f = open("video_info.txt", 'a+')            
@@ -111,7 +122,6 @@ class webCamera:
                 camera.release()
                 #cv2.destroyAllWindows()             
                 #f.close()        
-                
                 return
             #self.last_image=img.copy()
             
@@ -119,8 +129,12 @@ class webCamera:
         while True:        
             client,addr = self.socket.accept()
             print client,addr
+            client.settimeout(2)
+            self._processConnection(client, addr)
+            '''
             clientThread = threading.Thread(target = self._processConnection, args = (client, addr, ))  #有客户端连接时产生新的线程进行处理                      
             clientThread.start()
+            '''
 def main():      
     cam = webCamera()       
     cam.run()
