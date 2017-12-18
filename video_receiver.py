@@ -12,7 +12,7 @@ import cv2
 import re
 
 class webCamConnect:      
-    def __init__(self, resolution = [640,480], remoteAddress = ("192.168.0.101", 7999), windowName = "video"):          
+    def __init__(self, resolution = [640,480], remoteAddress = ("192.168.0.103", 7999), windowName = "video"):          
         self.remoteAddress = remoteAddress     
         self.resolution = resolution    
         self.name = windowName
@@ -25,13 +25,18 @@ class webCamConnect:
         
     def _setSocket(self):      
         self.socket=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        #self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_SNDTIMEO, 1000)
-        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_RCVTIMEO, 1000)
+        #self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_SNDTIMEO, 4000)
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_RCVTIMEO, 4000)
     def connect(self):      
-        self._setSocket()
-        self.socket.connect(self.remoteAddress)
-        
+        try:
+            self._setSocket()
+            self.socket.connect(self.remoteAddress)
+            return True
+        except:
+            print 'Socket init error!'
+            return False
+            
         
     def _processImage(self):    
         temp = self.socket.send(struct.pack("lhh",self.src,self.resolution[0],self.resolution[1]))
@@ -39,9 +44,9 @@ class webCamConnect:
         i=0
         while(1):    
             try:
-                info = struct.unpack("lhh",self.socket.recv(8))   
+                info = struct.unpack("lhh",self.socket.recv(8))   #待解决设置接收超时？？？？？？？？？？？？？？？？？
             except:
-                continue
+                return
             print info
             if len(info) == 0:
                 return
@@ -62,7 +67,7 @@ class webCamConnect:
                         
                         #self.image = cv2.GaussianBlur(self.image,(3,3),0)  
                         
-                        self.image = cv2.medianBlur(self.image, 5)
+                        #self.image = cv2.medianBlur(self.image, 5)
                         #self.image = cv2.bilateralFilter(self.image, 9, 75, 75)
                         #self.image = cv2.morphologyEx(self.image, cv2.MORPH_OPEN, (9,9))
                         
@@ -100,10 +105,13 @@ class webCamConnect:
             saveThread.setDaemon(1);          
             saveThread.start();  
         '''
+    
+    '''
     def setWindowName(self, name):      
-        self.name = name; 
+        self.name = name
     def setRemoteAddress(remoteAddress):      
-        self.remoteAddress = remoteAddress;   
+        self.remoteAddress = remoteAddress 
+    
     def _savePicToLocal(self, interval):      
         while True:          
             try:              
@@ -117,6 +125,7 @@ class webCamConnect:
             finally:              
                 self.mutex.release();              
                 time.sleep(interval);
+    
     def check_config(self):    
         path=os.getcwd()    
         print(path)      
@@ -147,14 +156,18 @@ class webCamConnect:
             self.src=911+self.img_quality        
             f.close()        
             print "Reading setting...."
+    '''
 def main():    
-    print "Creating connecting..."  
-    cam = webCamConnect();    
-    #cam.check_config()    
-    print "Pixel:%d * %d"%(cam.resolution[0],cam.resolution[1])
-    print "Destination ip: %s:%d"%(cam.remoteAddress[0],cam.remoteAddress[1])
+    
     while True:
-        cam.connect();      
+        print "\nCreating connecting..."  
+        cam = webCamConnect()  
+        #cam.check_config()    
+        print "Pixel:%d * %d"%(cam.resolution[0],cam.resolution[1])
+        print "Destination ip: %s:%d"%(cam.remoteAddress[0],cam.remoteAddress[1])
+        if cam.connect() == False:
+            time.sleep(1)
+            continue
         cam.getData(cam.interval);  
     
 if __name__ == "__main__":      

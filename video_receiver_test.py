@@ -26,8 +26,8 @@ class webCamConnect:
     def _setSocket(self):      
         self.socket=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        #self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_SNDTIMEO, 1000)
-        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_RCVTIMEO, 1000)
+        #self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_SNDTIMEO, 2000)
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_RCVTIMEO, 2000)
     def connect(self):      
         self._setSocket()
         self.socket.connect(self.remoteAddress)
@@ -35,6 +35,7 @@ class webCamConnect:
         
     def _processImage(self):    
         temp = self.socket.send(struct.pack("lhh",self.src,self.resolution[0],self.resolution[1]))
+        
         print temp        
         i=0
         while(1):    
@@ -53,8 +54,8 @@ class webCamConnect:
                     tempBuf=self.buf            
                     
                     while(bufSize):                 #循环读取到一张图片的长度
-                        tempBuf = self.socket.recv(bufSize)                
-
+                        
+                        tempBuf = self.socket.recv(bufSize)   
                         bufSize -= len(tempBuf)        
                         self.buf += tempBuf
                         data = numpy.fromstring(self.buf,dtype='uint8')
@@ -155,6 +156,7 @@ def main():
     print "Destination ip: %s:%d"%(cam.remoteAddress[0],cam.remoteAddress[1])
     while True:
         cam.connect();      
+        
         cam.getData(cam.interval);  
     
 if __name__ == "__main__":      

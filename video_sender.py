@@ -10,12 +10,22 @@ import os
 import numpy
 
 class webCamera: 
+    camera = None
+    socket = None
     def __init__(self, resolution = (640, 480), host = ("", 7999)):      
         self.resolution = resolution;      
         self.host = host;      
         self.setSocket(self.host);    
         self.img_quality = 95
         self.flag=0
+        
+    
+    def __del__(self):
+        if self.camera !=None:
+            self.camera.release()
+        if self.socket !=None:
+            self.socket.close()
+            
     '''
     def setImageResolution(self, resolution):      
         self.resolution = resolution;  
@@ -23,16 +33,23 @@ class webCamera:
     def setHost(self, host):      
         self.host = host;  
     '''    
-    def setSocket(self, host):      
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM);                  
-        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR,1);              
-        self.socket.bind(self.host);      
-        self.socket.listen(5);      
-        print "Server running on port:%d" % host[1]
+    def setSocket(self, host): 
+        while True:
+            try:
+                self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR,1)
+                self.socket.bind(self.host)
+                self.socket.listen(5)
+                print "Server running on port:%d" % host[1]
+                break
+            except:
+                print 'Socket init error!'
+                time.sleep(1)
+            
         
     def recv_config(self,client):   
         try:
-            info = struct.unpack("lhh",client.recv(8));   
+            info = struct.unpack("lhh",client.recv(8))
         except:
             print 'socket.error'
             return 0
@@ -54,16 +71,16 @@ class webCamera:
             print 'Connecting failed! receive config failed!'
             return 0
             
-    def _processConnection(self, client,addr):     
-        if(self.recv_config(client)==0):        
+    def _processConnection(self, client,addr):   
+        if(self.recv_config(client)==0):
             return
             
-        camera = cv2.VideoCapture(0)    
-        if camera == None:
+        self.camera = cv2.VideoCapture(0)
+        if self.camera == None:
             print 'Open camera Failed!'
             return
         
-        encode_param=[int(cv2.IMWRITE_JPEG_QUALITY),self.img_quality]  
+        encode_param=[int(cv2.IMWRITE_JPEG_QUALITY),self.img_quality]
         '''           
         f = open("video_info.txt", 'a+')    
         print "Got connection from %s:%d" % (addr[0], addr[1])
@@ -72,9 +89,9 @@ class webCamera:
         print "Connecting start time:%s"%time.strftime("%Y-%m-%d %H:%M:%S",time.localtime(time.time()))
         f.close()    
         '''
-        while(1):        
-            #time.sleep(0.1)        
-            (grabbed, img) = camera.read()  
+        while(1):
+            #time.sleep(0.1)
+            (grabbed, img) = self.camera.read()
             '''
             cv2.imshow('test',self.img)
             if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -83,7 +100,7 @@ class webCamera:
             try:
                 len(img)
             except:
-                camera.release()
+                self.camera.release()
                 print 'Get image failed! maybe camera is in use!'
                 return
                 
@@ -94,32 +111,33 @@ class webCamera:
                 return
             '''
             img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-            img  = cv2.resize(img,self.resolution)   
+            img  = cv2.resize(img,self.resolution)
             '''
             if self.flag==0:
                 self.last_image=img.copy()
                 self.flag=1
             dimage=cv2.subtract(img, self.last_image)
             '''
-            #img = cv2.GaussianBlur(img,(3,3),0)  
-            #img = cv2.Canny(img, 50, 150)  
+            #img = cv2.GaussianBlur(img,(3,3),0)
+            #img = cv2.Canny(img, 50, 150)
             
-            result, img_encoded = cv2.imencode('.jpg',img, encode_param)        
-            img_code = numpy.array(img_encoded)        
-            img_to_send  = img_code.tostring()   
+            #result, img_encoded = cv2.imencode('.jpg',img, encode_param)   
+            result, img_encoded = cv2.imencode('.jpg',img)
+            img_code = numpy.array(img_encoded)
+            img_to_send  = img_code.tostring()
 
                         
                 
-            try:                    
+            try:
                 client.send(struct.pack("lhh",len(img_to_send),
-                        self.resolution[0],self.resolution[1])+img_to_send); #发送图片信息(图片长度,分辨率,图片内容)                
-            except:    
+                        self.resolution[0],self.resolution[1])+img_to_send) #发送图片信息(图片长度,分辨率,图片内容)                
+            except:
                 
                 #f = open("video_info.txt", 'a+')            
-                print "%s:%d disconnected!" % (addr[0], addr[1])         
+                print "%s:%d disconnected!" % (addr[0], addr[1])  
                 print "Connecting end time:%s"%time.strftime("%Y-%m-%d %H:%M:%S",time.localtime(time.time()))
                 print "****************************************"
-                camera.release()
+                self.camera.release()
                 #cv2.destroyAllWindows()             
                 #f.close()        
                 return
