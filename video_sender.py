@@ -9,6 +9,8 @@ import time
 import os
 import numpy
 
+import cmd_receiver
+
 class WebCamera(object): 
     camera = None
     socket = None
@@ -153,9 +155,9 @@ class WebCamera(object):
             clientThread = threading.Thread(target = self._processConnection, args = (client, addr, ))  #有客户端连接时产生新的线程进行处理                      
             clientThread.start()
             '''
-def main():      
+
+if __name__ == "__main__":    
+    cmd_receiver = cmd_receiver.CmdReceiver()
+    cmd_receiver.run()
     cam = WebCamera()       
     cam.run()
-    
-if __name__ == "__main__":      
-    main()

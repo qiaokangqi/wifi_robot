@@ -12,6 +12,8 @@ import cv2
 
 import re
 
+import remote_control
+
 class WebCamera(object):      
     def __init__(self, resolution = [640,480], remoteAddress = ("192.168.0.101", 7999), windowName = "video", window = None):          
         self.remoteAddress = remoteAddress     
@@ -178,6 +180,8 @@ class WebCamera(object):
     '''
     
 if __name__ == "__main__":      
+    remote_control = remote_control.RemoteControl()
+    remote_control.run()
     while True:
         print "\nCreating connecting..."  
         cam = WebCamera()  

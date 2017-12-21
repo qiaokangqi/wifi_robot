@@ -15,25 +15,22 @@ class RemoteControl(object):
         self.cmd_transmission_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.destination_addr = destination_addr
 
+    def get_operation(self):
+        op_code =raw_input() 
+        return op_code
+
     def run_thread(self):
         while True:  
-            msg = raw_input()  
+            op_code = self.get_operation() 
             '''
             if not msg:  
                 break  
             '''
-            self.cmd_transmission_socket.sendto(msg, self.destination_addr)
+            self.cmd_transmission_socket.sendto(op_code, self.destination_addr)
     
     def run(self):
         transmission_thread = threading.Thread(target = self.run_thread)                        
-        transmission_thread.start()
-        while True:
-            pass
-          
-    '''
-    def connect_robot(self):
-        pass
-    '''
+        transmission_thread.start()       
     
     def __del__(self):
         if self.cmd_transmission_socket != None:
@@ -42,4 +39,5 @@ class RemoteControl(object):
 if __name__ == "__main__":  
     remote_control = RemoteControl()
     remote_control.run()
-        
+    while True:
+        pass
