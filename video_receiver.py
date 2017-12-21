@@ -12,7 +12,7 @@ import cv2
 import re
 
 class webCamConnect:      
-    def __init__(self, resolution = [640,480], remoteAddress = ("192.168.0.103", 7999), windowName = "video"):          
+    def __init__(self, resolution = [640,480], remoteAddress = ("192.168.0.101", 7999), windowName = "video", window = None):          
         self.remoteAddress = remoteAddress     
         self.resolution = resolution    
         self.name = windowName
@@ -22,6 +22,9 @@ class webCamConnect:
         self.path=os.getcwd()        
         self.img_quality = 5
         self.flag=0
+        self.window=None
+        if window !=None:
+            self.window=window
         
     def _setSocket(self):      
         self.socket=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -71,7 +74,19 @@ class webCamConnect:
                         #self.image = cv2.bilateralFilter(self.image, 9, 75, 75)
                         #self.image = cv2.morphologyEx(self.image, cv2.MORPH_OPEN, (9,9))
                         
-                        cv2.imshow(self.name, self.image)  
+                        if self.window!=None:
+                            
+                            if self.window.bmp == None:
+                                height, width = self.image.shape[:2]
+                                self.window.SetSize((width, height))
+                                self.window.bmp = wx.BitmapFromBuffer(width, height, self.image)
+                                self.window.Bind(wx.EVT_PAINT, self.window.OnPaint)
+                            
+                            self.window.bmp.CopyFromBuffer(self.image)
+                            self.window.Refresh()
+                        else:
+                            cv2.imshow(self.name, self.image) 
+                  
                         '''
                         if i%30==0:
                             cv2.imwrite(str(i)+'.jpg', self.image)
@@ -79,8 +94,11 @@ class webCamConnect:
                         '''
                         
                  except:                
-                     print "Receive failed!"            
-                     pass;              
+                     print "Receive failed!"
+                     '''
+                     time.sleep(2)
+                     return
+                     '''
                  finally:                
                      self.mutex.release();               
                      if cv2.waitKey(10) == 27:                    
@@ -157,8 +175,8 @@ class webCamConnect:
             f.close()        
             print "Reading setting...."
     '''
-def main():    
     
+if __name__ == "__main__":      
     while True:
         print "\nCreating connecting..."  
         cam = webCamConnect()  
@@ -168,7 +186,4 @@ def main():
         if cam.connect() == False:
             time.sleep(1)
             continue
-        cam.getData(cam.interval);  
-    
-if __name__ == "__main__":      
-    main();  
+        cam.getData(cam.interval);   
