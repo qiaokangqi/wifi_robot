@@ -1,21 +1,21 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import socket;  
-import threading;
-import struct;
+import socket
+import threading
+import struct
 import cv2
 import time
 import os
 import numpy
 
-class webCamera: 
+class WebCamera(object): 
     camera = None
     socket = None
     def __init__(self, resolution = (640, 480), host = ("", 7999)):      
-        self.resolution = resolution;      
-        self.host = host;      
-        self.setSocket(self.host);    
+        self.resolution = resolution    
+        self.host = host
+        self.setSocket(self.host) 
         self.img_quality = 95
         self.flag=0
         
@@ -154,7 +154,7 @@ class webCamera:
             clientThread.start()
             '''
 def main():      
-    cam = webCamera()       
+    cam = WebCamera()       
     cam.run()
     
 if __name__ == "__main__":      

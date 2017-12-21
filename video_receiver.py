@@ -1,17 +1,18 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import socket;  
-import threading;  
-import struct;  import os;  
-import time;  
-import sys;
+import socket
+import threading
+import struct
+import os 
+import time
+import sys
 import numpy
 import cv2
 
 import re
 
-class webCamConnect:      
+class WebCamera(object):      
     def __init__(self, resolution = [640,480], remoteAddress = ("192.168.0.101", 7999), windowName = "video", window = None):          
         self.remoteAddress = remoteAddress     
         self.resolution = resolution    
@@ -113,36 +114,36 @@ class webCamConnect:
     def getData(self, interval):  
         self._processImage()
         '''         
-        showThread=threading.Thread(target=self._processImage);     
-        showThread.start();    
+        showThread=threading.Thread(target=self._processImage)     
+        showThread.start()
         '''
         '''
         if interval != 0:   # 非0则启动保存截图到本地的功能  
             saveThread=threading.Thread(target=self._savePicToLocal,args = (interval, 
-                ));          
-            saveThread.setDaemon(1);          
-            saveThread.start();  
+                ))
+            saveThread.setDaemon(1)
+            saveThread.start()
         '''
     
     '''
     def setWindowName(self, name):      
         self.name = name
     def setRemoteAddress(remoteAddress):      
-        self.remoteAddress = remoteAddress 
+        self.remoteAddress = remoteAddress
     
     def _savePicToLocal(self, interval):      
         while True:          
             try:              
                 self.mutex.acquire();              
-                path=os.getcwd() + "\\" + "savePic";              
+                path=os.getcwd() + "\\" + "savePic"      
                 if not os.path.exists(path):                  
-                    os.mkdir(path);            
+                    os.mkdir(path)     
                 cv2.imwrite(path + "\\" + time.strftime("%Y%m%d-%H%M%S", time.localtime(time.time())) + ".jpg",self.image)        
             except:              
                 pass;          
             finally:              
-                self.mutex.release();              
-                time.sleep(interval);
+                self.mutex.release()          
+                time.sleep(interval)
     
     def check_config(self):    
         path=os.getcwd()    
@@ -179,11 +180,11 @@ class webCamConnect:
 if __name__ == "__main__":      
     while True:
         print "\nCreating connecting..."  
-        cam = webCamConnect()  
+        cam = WebCamera()  
         #cam.check_config()    
         print "Pixel:%d * %d"%(cam.resolution[0],cam.resolution[1])
         print "Destination ip: %s:%d"%(cam.remoteAddress[0],cam.remoteAddress[1])
         if cam.connect() == False:
             time.sleep(1)
             continue
-        cam.getData(cam.interval);   
+        cam.getData(cam.interval)
